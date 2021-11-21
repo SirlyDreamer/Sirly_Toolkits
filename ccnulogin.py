@@ -16,9 +16,9 @@ def login():
             r = requests.post(url,data=payload,headers=headers)
             if r.status_code == 200:
                 return True
-            time.sleep(1)
         except requests.exceptions.RequestException as errinfo:
             print(errinfo)
+        time.sleep(1)
     return False
 
 def testNet(url):
@@ -27,9 +27,9 @@ def testNet(url):
             r = requests.get(url,headers=headers,timeout=(3.05,12.05))
             if r.status_code == 200:
                 return True
-            time.sleep(1)
         except requests.exceptions.RequestException as errinfo:
             print(errinfo)
+        time.sleep(1)
     return False
 
 def main():
@@ -39,7 +39,7 @@ def main():
             print (time.strftime("[%Y-%m-%d %H:%M:%S] Network Connect Succeed!", time.localtime()))  
         else:
             print (time.strftime("[%Y-%m-%d %H:%M:%S] Network Connect Failed, trying to login...", time.localtime()))
-            while(True):
+            while True:
                 if(testNet("http://10.220.250.50")):
                     if(login()):
                         SleepTime = 10
