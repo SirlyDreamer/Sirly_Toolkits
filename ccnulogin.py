@@ -7,7 +7,7 @@ headers = { "User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/
 def login():
     username=""
     passwd=""
-    url = 'http://10.220.250.50/1.htm'
+    url = 'http://10.220.250.50/1.html'
     payload = {"DDDDD":"%s"%username,
             "upass":"%s"%passwd,
             "suffix":"123456",
@@ -52,6 +52,7 @@ def main():
                 else:
                     SleepTime = 60
                     print (time.strftime("[%Y-%m-%d %H:%M:%S] Auth Server Connect Failed, waiting for 60s...", time.localtime()))
+                time.sleep(SleepTime)
         time.sleep(SleepTime)
 
 main()
