@@ -1,54 +1,55 @@
-######################################   NOTIFICATION   ####################################################
-# Due to the limitation that DomServer is not able to cuntomize the judgehost password from environment, 
+####################################################   NOTIFICATION   ####################################################
+# Due to the limitation that domserver is not able to cuntomize the judgehost password from environment, 
 # so we should create dj-mariadb and domserver first.
 # Just run this command:
-#
-# docker-compose up -d dj-mariadb domserver 
+# $ docker-compose up -d dj-mariadb domserver 
 # 
 # Then, run these command to get password:
 #
-# TO GET ADMIN PASSWD:
-# docker exec -it domserver cat /opt/domjudge/domserver/etc/initial_admin_password.secret
+# TO GET ADMIN PASSWORD:
+# $ docker exec -it domserver cat /opt/domjudge/domserver/etc/initial_admin_password.secret
 #
-# TO GET JUDGEHOST PASSWD:
-# docker exec -it domserver cat /opt/domjudge/domserver/etc/restapi.secret
+# TO GET JUDGEHOST PASSWORD:
+# $ docker exec -it domserver cat /opt/domjudge/domserver/etc/restapi.secret
 #
-############################################################################################################
+# And then, run this to enable judgehost:
+# $ docker-compose up -d
+#
+##########################################################################################################################
+
 services:
   dj-mariadb:
-    image: mariadb:latest 
+    container_name: dj-mariadb
+    image: mariadb:latest
     restart: unless-stopped
-    networks:
-      - domjudge
-    ports: 
+    ports:
       - "13306:3306"
-    volumes: 
-      - DomDatabase:/var/lib/mysql
+    volumes:
+      - database:/var/lib/mysql
     environment:
-      - MYSQL_ROOT_PASSWORD=<RANDOM A STRONG PASSWORD>
+      - MYSQL_ROOT_PASSWORD=<GENERATE A STRONG PASSWORD>
       - MYSQL_USER=domjudge
-      - MYSQL_PASSWORD=<RANDOM A STRONG PASSWORD>
+      - MYSQL_PASSWORD=<GENERATE A STRONG PASSWORD>
       - MYSQL_DATABASE=domjudge
-      - CONTAINER_TIMEZONE=Asia/Shanghai 
+      - CONTAINER_TIMEZONE=Asia/Shanghai
     command: --max-connections=1000 --max-allowed-packet=1G --innodb-log-file-size=10G
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: mysqladmin ping -h localhost -u $$MYSQL_USER --password=$$MYSQL_PASSWORD
       start_period: 10s
       interval: 5s
       timeout: 1s
       retries: 5
-  
+
   domserver:
+    container_name: domserver
     image: domjudge/domserver:latest
     restart: unless-stopped
-    networks:
-      - domjudge
-    ports: 
+    ports:
       - "80:80"
     links:
       - 'dj-mariadb:mariadb'
     depends_on:
-      - dj-mariadb: { condition: service_healthy }
+      dj-mariadb: { condition: service_healthy }
     environment:
       - MYSQL_HOST=mariadb
       - MYSQL_USER=domjudge
@@ -56,46 +57,38 @@ services:
       - MYSQL_PASSWORD=<SAME AS THE MYSQL_PASSWORD ABOVE>
       - MYSQL_ROOT_PASSWORD=<SAME AS THE MYSQL_ROOT_PASSWORD ABOVE>
       - CONTAINER_TIMEZONE=Asia/Shanghai
-  
+
   JudgeHost-0:
     container_name: judgehost-0
-    image: 'domjudge/judgehost:latest' 
+    image: 'domjudge/judgehost:latest'
     restart: unless-stopped
-    networks: 
-      - domjudge
     links:
       - 'domserver:domserver'
     depends_on:
-      - domserver: { condition: service_healthy }
+      domserver: { condition: service_healthy }
     privileged: true
     volumes:
       - '/sys/fs/cgroup:/sys/fs/cgroup:ro'
     environment:
       - DAEMON_ID=0
-      - JUDGEDAEMON_PASSWORD=<GET PASSWD FROM TERMINAL>
+      - JUDGEDAEMON_PASSWORD=<GET THIS FROM TERMINAL>
       - CONTAINER_TIMEZONE=Asia/Shanghai
-    
+
   JudgeHost-1:
     container_name: judgehost-1
-    image: 'domjudge/judgehost:latest' 
+    image: 'domjudge/judgehost:latest'
     restart: unless-stopped
-    networks: 
-      - domjudge
     links:
       - 'domserver:domserver'
     depends_on:
-      - domserver: { condition: service_healthy }
+      domserver: { condition: service_healthy }
     privileged: true
     volumes:
       - '/sys/fs/cgroup:/sys/fs/cgroup:ro'
     environment:
       - DAEMON_ID=1
-      - JUDGEDAEMON_PASSWORD=<GET PASSWD FROM TERMINAL>
+      - JUDGEDAEMON_PASSWORD=<GET THIS FROM TERMINAL>
       - CONTAINER_TIMEZONE=Asia/Shanghai
-  
-networks:
-  domjudge:
-    name: domjudge
 
 volumes:
-  DomDatabase:
+  database:
