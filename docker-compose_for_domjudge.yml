@@ -12,8 +12,8 @@
 # TO GET JUDGEHOST PASSWORD:
 # $ docker exec -it domserver cat /opt/domjudge/domserver/etc/restapi.secret
 #
-# And then, run this to enable judgehost:
-# $ docker-compose up -d
+# And then, run this to run 16 judgehost (you can customize it by change the number after "judgehost="):
+# $ docker-compose up -d --scale judgehost=16
 #
 ##########################################################################################################################
 
@@ -58,8 +58,7 @@ services:
       - MYSQL_ROOT_PASSWORD=<SAME AS THE MYSQL_ROOT_PASSWORD ABOVE>
       - CONTAINER_TIMEZONE=Asia/Shanghai
 
-  JudgeHost-0:
-    container_name: judgehost-0
+  judgehost:
     image: 'domjudge/judgehost:latest'
     restart: unless-stopped
     links:
@@ -70,23 +69,6 @@ services:
     volumes:
       - '/sys/fs/cgroup:/sys/fs/cgroup:ro'
     environment:
-      - DAEMON_ID=0
-      - JUDGEDAEMON_PASSWORD=<GET THIS FROM TERMINAL>
-      - CONTAINER_TIMEZONE=Asia/Shanghai
-
-  JudgeHost-1:
-    container_name: judgehost-1
-    image: 'domjudge/judgehost:latest'
-    restart: unless-stopped
-    links:
-      - 'domserver:domserver'
-    depends_on:
-      domserver: { condition: service_healthy }
-    privileged: true
-    volumes:
-      - '/sys/fs/cgroup:/sys/fs/cgroup:ro'
-    environment:
-      - DAEMON_ID=1
       - JUDGEDAEMON_PASSWORD=<GET THIS FROM TERMINAL>
       - CONTAINER_TIMEZONE=Asia/Shanghai
 
